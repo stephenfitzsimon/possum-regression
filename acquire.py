@@ -1,3 +1,7 @@
+# Stephen FitzSimon
+# possum regression project acquire.py files
+# Contains functions to acquire and prepare the possum data frame
+
 import pandas as pd
 import geopandas as gpd
 
@@ -13,6 +17,7 @@ def make_dataset():
     df = map_state_names(df)
     df = convert_centimeters(df)
     df = make_geo_columns(df)
+    df = make_sex_column(df)
     return df.dropna()
 
 def get_dataset():
@@ -141,3 +146,10 @@ def make_geo_columns(df):
     df['elevation'] = df['trap_site'].map(elev_map)
     return df
 
+def make_sex_column(df):
+    sex_map = {
+        'm':'male',
+        'f':'female'
+    }
+    df['sex'] = df['sex'].map(sex_map)
+    return df
