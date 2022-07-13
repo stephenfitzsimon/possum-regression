@@ -6,6 +6,19 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 
+#holds all the columns that are measurements from the Lindenmayer study
+MEASUREMENT_COLUMNS =  [
+    {'col':'total_length', 'string':'Total Length'},
+    {'col':'tail_length', 'string' : 'Tail Length'},
+    {'col':'head_length', 'string' : 'Head Length'},
+    {'col':'skull_width', 'string': 'Skull Width'}, 
+    {'col': 'foot_length', 'string': 'Foot Length'},
+    {'col': 'eye_width', 'string': 'Eye Width'},
+    {'col': 'chest_girth',  'string': 'Chest Girth'},
+    {'col':'belly_girth','string':'Belly Girth'}, 
+    {'col':'ear_length', 'string':'Ear Length'}
+]
+
 def make_hist_distributions(df):
     """
     Creates a 3 x 3 graph with subplots of the distribution of the measurements
@@ -13,23 +26,11 @@ def make_hist_distributions(df):
     """
     #make a plot with 9 subplots
     fig, axes = plt.subplots(3, 3, figsize = (15,15))
-    #columns to plot
-    columns_to_plot = [
-        {'col':'total_length', 'string':'Total Length'},
-        {'col':'tail_length', 'string' : 'Tail Length'},
-        {'col':'head_length', 'string' : 'Head Length'},
-        {'col':'skull_width', 'string': 'Skull Width'}, 
-        {'col': 'foot_length', 'string': 'Foot Length'},
-        {'col': 'eye_width', 'string': 'Eye Width'},
-        {'col': 'chest_girth',  'string': 'Chest Girth'},
-        {'col':'belly_girth','string':'Belly Girth'}, 
-        { 'col':'ear_length', 'string':'Ear Length'}
-    ]
     #to set the row and columns for the graph
     r = 1
     c = 1
     #now plot each column
-    for i, col_dict in enumerate(columns_to_plot):
+    for i, col_dict in enumerate(MEASUREMENT_COLUMNS):
         if i%3 == 0:
             #reached the end of the row, reset column parameter
             c=1
@@ -51,22 +52,10 @@ def make_boxplot_outliers(df):
     """
     #make a plot with 9 subplots arranged in a single column
     fig, axes = plt.subplots(3, 3, figsize = (15,18))
-    #columns to plot
-    columns_to_plot = [
-        {'col':'total_length', 'string':'Total Length'},
-        {'col':'tail_length', 'string' : 'Tail Length'},
-        {'col':'head_length', 'string' : 'Head Length'},
-        {'col':'skull_width', 'string': 'Skull Width'}, 
-        {'col': 'foot_length', 'string': 'Foot Length'},
-        {'col': 'eye_width', 'string': 'Eye Width'},
-        {'col': 'chest_girth',  'string': 'Chest Girth'},
-        {'col':'belly_girth','string':'Belly Girth'}, 
-        { 'col':'ear_length', 'string':'Ear Length'}
-    ]
     #to set the row and columns for the graph
     r = 1
     c = 1
-    for i, col_dict in enumerate(columns_to_plot):
+    for i, col_dict in enumerate(MEASUREMENT_COLUMNS):
         if i%3 == 0:
             #reached the end of the row, reset column parameter
             c=1
@@ -109,19 +98,7 @@ def get_outliers_df(df):
     """
     #to store outputs
     outputs = []
-    #measurement columns
-    measurement_columns = [
-        {'col':'total_length', 'string':'Total Length'},
-        {'col':'tail_length', 'string' : 'Tail Length'},
-        {'col':'head_length', 'string' : 'Head Length'},
-        {'col':'skull_width', 'string': 'Skull Width'}, 
-        {'col': 'foot_length', 'string': 'Foot Length'},
-        {'col': 'eye_width', 'string': 'Eye Width'},
-        {'col': 'chest_girth',  'string': 'Chest Girth'},
-        {'col':'belly_girth','string':'Belly Girth'}, 
-        { 'col':'ear_length', 'string':'Ear Length'}
-    ]
-    for col_dict in measurement_columns:
+    for col_dict in MEASUREMENT_COLUMNS:
         # get bounds
         lower, upper = get_outlier_bounds(df[col_dict['col']], 1.5)
         #count the numbers of outliers
