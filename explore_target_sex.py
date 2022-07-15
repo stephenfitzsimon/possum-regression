@@ -6,6 +6,7 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
+from scipy.stats import ttest_ind, levene
 
 #holds all the columns that are measurements from the Lindenmayer study
 MEASUREMENT_COLUMNS = [
@@ -101,3 +102,49 @@ def make_pointplot(df):
     fig.suptitle('Measurement Pointplot Showing Sexual Dimorphism')
     #show plot
     plt.show()
+    
+def make_histograms_by_sex(df):
+    """
+    Creates a 3 x 3 graph with subplots of the boxplots of the measurements
+    in the data frame hued by the sex column
+    """
+    #make a plot with 9 subplots arranged in a single column
+    fig, axes = plt.subplots(3, 3, figsize = (15,18))
+    #to set the row and columns for the graph
+    r = 1
+    c = 1
+    for i, col_dict in enumerate(MEASUREMENT_COLUMNS):
+        if i%3 == 0:
+            #reached the end of the row, reset column parameter
+            c=1
+        #make the boxplot
+        sns.histplot(data=df, x =col_dict['col'], hue='sex', kde=True, ax = axes[r-1, c-1])
+        #set x and y labels
+        axes[r-1, c-1].set_xlabel(col_dict['string'])
+        axes[r-1, c-1].set_ylabel('')
+        if c == 3:
+            #reached the end of the row, move to the next row
+            r +=1
+        #move to the next column for the next graph
+        c += 1
+    #set supertitle
+    fig.suptitle('Measurement Distributions Showing Sexual Dimorphism')
+    #show plot
+    plt.show()
+    
+def hypothesis_two_sample_ttest(df, alpha = 0.05):
+    outputs = []
+    male_df = df[df['sex']=='male']
+    female_df = df[df['sex']=='female']
+    for col_dict in MEASUREMENT_COLUMNS:
+        stat_levene, p_levene = levene(male_df[col_dict['col']], female_df[col_dict['col']])
+        t, p = ttest_ind(male_df[col_dict['col']], female_df[col_dict['col']], equal_var = not (p_levene < alpha))
+        output = {
+            'column_name':col_dict['col'],
+            't-stat':t,
+            'p-value':p,
+            'reject_null':p < alpha
+        }
+        outputs.append(output)
+    return pd.DataFrame(outputs)
+
