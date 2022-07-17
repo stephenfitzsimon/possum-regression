@@ -25,7 +25,7 @@ def make_hist_distributions(df):
     in the data frame
     """
     #make a plot with 9 subplots
-    fig, axes = plt.subplots(3, 3, figsize = (15,15))
+    fig, axes = plt.subplots(3, 3, figsize = (15,15), constrained_layout=True)
     #to set the row and columns for the graph
     r = 1
     c = 1
@@ -51,7 +51,7 @@ def make_boxplot_outliers(df):
     in the data frame
     """
     #make a plot with 9 subplots arranged in a single column
-    fig, axes = plt.subplots(3, 3, figsize = (15,18))
+    fig, axes = plt.subplots(3, 3, figsize = (15,18), constrained_layout=True)
     #to set the row and columns for the graph
     r = 1
     c = 1
