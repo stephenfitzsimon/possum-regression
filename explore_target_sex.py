@@ -238,3 +238,19 @@ def hypothesis_two_sample_ttest_ratio(df, alpha = 0.05):
         outputs.append(output)
     #return as a dataframes
     return pd.DataFrame(outputs)
+
+def make_bodylength_column(df):
+    """
+    Creates a dataframe with the bodylength column
+    """
+    #make a dataframe to store the ratios
+    bodylength_df = df.loc[:,'case':'sex']
+    #make a series of pairs
+    pairs = it.combinations(MEASUREMENT_COLUMNS, 2)
+    column_names = []
+    for col_one, col_two in pairs:
+        column_names.append(f"{col_one['col']}_ratio_{col_two['col']}")
+        #make a ratio column for each pair
+        ratio_df[f"{col_one['col']}_ratio_{col_two['col']}"] = df[col_one['col']]/df[col_two['col']]
+    #return the dataframe
+    return ratio_df, column_names
