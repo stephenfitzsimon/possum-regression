@@ -179,9 +179,40 @@ def make_ratio_dataframe(df):
     #return the dataframe
     return ratio_df, column_names
 
-def make_boxplot_sex_ratios(df):
+def make_scatterplot_sex_ratios(df):
     """
     Creates a 12 x 3 graph with subplots of the boxplots of the ratio
+    of the measurements hued by the sex
+    """
+    #make a series of pairs
+    pairs = it.combinations(MEASUREMENT_COLUMNS, 2)
+    #make a plot with 9 subplots arranged in a single column
+    fig, axes = plt.subplots(9, 4, figsize = (15,35), constrained_layout=True)
+    #to set the row and columns for the graph
+    r = 1
+    c = 1
+    for i, pair in enumerate(pairs):
+        if i%4 == 0:
+            #reached the end of the row, reset column parameter
+            c=1
+        #make the boxplot
+        sns.scatterplot(data=df, x = pair[0]['col'], y=pair[1]['col'], hue='sex', ax = axes[r-1, c-1])
+        #set x and y labels
+        axes[r-1, c-1].set_xlabel(pair[0]['string'])
+        axes[r-1, c-1].set_ylabel(pair[1]['string'])
+        if c == 4:
+            #reached the end of the row, move to the next row
+            r +=1
+        #move to the next column for the next graph
+        c += 1
+    #set supertitle
+    fig.suptitle('Measurement Ratio Boxplots')
+    #show plot
+    plt.show()
+
+def make_boxplot_sex_ratios(df):
+    """
+    Creates a 12 x 3 graph with subplots of the scatterplots of the pairs
     of the measurements hued by the sex
     """
     #get the ratio dataframe
@@ -244,13 +275,57 @@ def make_bodylength_column(df):
     Creates a dataframe with the bodylength column
     """
     #make a dataframe to store the ratios
-    bodylength_df = df.loc[:,'case':'sex']
-    #make a series of pairs
-    pairs = it.combinations(MEASUREMENT_COLUMNS, 2)
-    column_names = []
-    for col_one, col_two in pairs:
-        column_names.append(f"{col_one['col']}_ratio_{col_two['col']}")
-        #make a ratio column for each pair
-        ratio_df[f"{col_one['col']}_ratio_{col_two['col']}"] = df[col_one['col']]/df[col_two['col']]
-    #return the dataframe
-    return ratio_df, column_names
+    bodylength_df = df.copy()
+    #make body length column
+    bodylength_df['body_length'] = bodylength_df['total_length'] - (bodylength_df['tail_length'] + bodylength_df['head_length'])
+    return bodylength_df
+
+def single_two_sample_ttest(df, column_name, alpha = 0.05):
+    """
+    Performs a single two sample ttest on a column given by column_name
+    """
+    #to hold test output
+    outputs = []
+    #split dataframe into male and female
+    male_df = df[df['sex']=='male']
+    female_df = df[df['sex']=='female']
+    #perform a leven test to check if the variances are the same
+    stat_levene, p_levene = levene(male_df[column_name], female_df[column_name])
+    #perform the t-test
+    t, p = ttest_ind(male_df[column_name], female_df[column_name], equal_var = not (p_levene < alpha))
+    #save output to a dictionary
+    output = {
+        'column_name':column_name,
+        't-stat':t,
+        'p-value':p,
+        'reject_null':p < alpha
+    }
+    #add the calculated stats to the list
+    outputs.append(output)
+    #return a dataframe
+    return pd.DataFrame(outputs)
+
+def single_two_sample_ttest_greater(df, column_name, alpha = 0.05):
+    """
+    Performs a single two sample ttest on a column given by column_name
+    """
+    #to hold test output
+    outputs = []
+    #split dataframe into male and female
+    male_df = df[df['sex']=='male']
+    female_df = df[df['sex']=='female']
+    #perform a leven test to check if the variances are the same
+    stat_levene, p_levene = levene(male_df[column_name], female_df[column_name])
+    #perform the t-test
+    t, p = ttest_ind(male_df[column_name], female_df[column_name], equal_var = not (p_levene < alpha))
+    #save output to a dictionary
+    output = {
+        'column_name':column_name,
+        't-stat':t,
+        'p-value':p,
+        'reject_null':p < alpha
+    }
+    #add the calculated stats to the list
+    outputs.append(output)
+    #return a dataframe
+    return pd.DataFrame(outputs)
