@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import itertools as it
 from scipy.stats import ttest_ind, levene
+from math import pi
 
 #holds all the columns that are measurements from the Lindenmayer study
 MEASUREMENT_COLUMNS = [
@@ -79,7 +80,7 @@ def compare_stats(df):
 
 def make_pointplot(df):
     """
-    Creates a 3 x 3 graph with subplots of the boxplots of the measurements
+    Creates a 3 x 3 graph with subplots of the pointplots of the measurements
     in the data frame hued by the sex column
     """
     #make a plot with 9 subplots arranged in a single column
@@ -108,7 +109,7 @@ def make_pointplot(df):
     
 def make_histograms_by_sex(df):
     """
-    Creates a 3 x 3 graph with subplots of the boxplots of the measurements
+    Creates a 3 x 3 graph with subplots of the histplots of the measurements
     in the data frame hued by the sex column
     """
     #make a plot with 9 subplots arranged in a single column
@@ -181,7 +182,7 @@ def make_ratio_dataframe(df):
 
 def make_scatterplot_sex_ratios(df):
     """
-    Creates a 12 x 3 graph with subplots of the boxplots of the ratio
+    Creates a 12 x 3 graph with subplots of the scatter plots of the ratio
     of the measurements hued by the sex
     """
     #make a series of pairs
@@ -212,7 +213,7 @@ def make_scatterplot_sex_ratios(df):
 
 def make_boxplot_sex_ratios(df):
     """
-    Creates a 12 x 3 graph with subplots of the scatterplots of the pairs
+    Creates a 12 x 3 graph with subplots of the boxplots of the pairs
     of the measurements hued by the sex
     """
     #get the ratio dataframe
@@ -270,7 +271,7 @@ def hypothesis_two_sample_ttest_ratio(df, alpha = 0.05):
     #return as a dataframes
     return pd.DataFrame(outputs)
 
-def make_bodylength_column(df):
+def make_body_column(df):
     """
     Creates a dataframe with the bodylength column
     """
@@ -279,6 +280,13 @@ def make_bodylength_column(df):
     #make body length column
     bodylength_df['body_length'] = bodylength_df['total_length'] - (bodylength_df['tail_length'] + bodylength_df['head_length'])
     return bodylength_df
+
+def make_ratio_columns(df):
+    df = make_body_column(df)
+    df['body_head_ratio']  = df['body_length']/df['head_length']
+    df['body_eye_ratio'] = df['body_length']/df['eye_width']
+    df['body_skull_ratio'] = df['body_length']/df['skull_width']
+    return df
 
 def single_two_sample_ttest(df, column_name, alpha = 0.05):
     """
