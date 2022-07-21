@@ -1,14 +1,13 @@
 # Stephen FitzSimon
 # possum regression project explore_target_sex.py files
 # Contains functions to prepare the possum dataframe for multivariate exploration
-# and modelling of the sex target variable
+# of the sex target variable
 
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
 import itertools as it
 from scipy.stats import ttest_ind, levene
-from math import pi
 
 #holds all the columns that are measurements from the Lindenmayer study
 MEASUREMENT_COLUMNS = [
