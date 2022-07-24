@@ -72,24 +72,31 @@ DROP_COLUMNS = [
 
 ### MODEL MAKERS
 
+def test_model(train, validate, test, baseline_acc):
+    X_train, y_train, X_val, y_val = prepare_train_validate(train, validate, MODEL_STRATEGY_DICTIONARY['measurement_ratio'])
+    X_test, y_test = prepare_test(train, test, MODEL_STRATEGY_DICTIONARY['measurement_ratio'])
+    output, y_test = make_radius_neighbor_model_test(X_train, y_train, X_val, y_val, X_test, y_test, baseline_acc)
+    return pd.DataFrame([output]), y_test
+
 def model_maker(train, validate, baseline_acc):
+    strategy_column_name = 'modeling_strategy'
     outputs = []
     for strategy in MODEL_STRATEGIES:
         X_train, y_train, X_val, y_val = prepare_train_validate(train, validate, MODEL_STRATEGY_DICTIONARY[strategy])
         output_log_reg = make_log_reg_model(X_train, y_train, X_val, y_val, baseline_acc)
-        output_log_reg['strategy'] = strategy
+        output_log_reg[strategy_column_name] = strategy
         outputs.append(output_log_reg)
         output_svm = make_svm_model(X_train, y_train, X_val, y_val, baseline_acc)
-        output_svm['strategy'] = strategy
+        output_svm[strategy_column_name] = strategy
         outputs.append(output_svm)
         output_knn = make_knn_model(X_train, y_train, X_val, y_val, baseline_acc)
-        output_knn['strategy'] = strategy
+        output_knn[strategy_column_name] = strategy
         outputs.append(output_knn)
         output_rn = make_radius_neighbor_model(X_train, y_train, X_val, y_val, baseline_acc)
-        output_rn['strategy'] = strategy
+        output_rn[strategy_column_name] = strategy
         outputs.append(output_rn)
         output_nc = make_nearest_centroid_model(X_train, y_train, X_val, y_val, baseline_acc)
-        output_nc['strategy'] = strategy
+        output_nc[strategy_column_name] = strategy
         outputs.append(output_nc)
     return pd.DataFrame(outputs)
 
@@ -178,6 +185,26 @@ def make_radius_neighbor_model(X_train, y_train, X_val, y_val, baseline_acc, ret
         return metrics_dict, metrics_dict_val
     else:
         return output
+    
+def make_radius_neighbor_model_test(X_train, y_train, X_val, y_val, X_test, y_test, baseline_acc):
+    rn = neigh.RadiusNeighborsClassifier(radius = 2.5).fit(X_train, y_train['sex'])
+    y_train['predicted'] = rn.predict(X_train)
+    y_val['predicted'] = rn.predict(X_val)
+    y_test['predicted'] = rn.predict(X_test)
+    y_probs = rn.predict_proba(X_test)
+    y_test['probability_male'] = y_probs[:,1]
+    y_test['probability_female'] = y_probs[:,0]
+    metrics_dict = metrics.classification_report(y_train['sex'], y_train['predicted'], output_dict=True)
+    metrics_dict_val = metrics.classification_report(y_val['sex'], y_val['predicted'], output_dict=True)
+    metrics_dict_test = metrics.classification_report(y_test['sex'], y_test['predicted'], output_dict=True)
+    output = {
+        'model':'Radius Neighbors Classification',
+        'train_accuracy': metrics_dict['accuracy'],
+        'validate_accuracy': metrics_dict_val['accuracy'],
+        'test_accuracy': metrics_dict_test['accuracy'],
+        'better_than_baseline':metrics_dict_test['accuracy'] > baseline_acc
+    }
+    return output, y_test
 
 def make_nearest_centroid_model(X_train, y_train, X_val, y_val, baseline_acc, return_report = False):
     nc = neigh.NearestCentroid().fit(X_train, y_train['sex'])
@@ -211,7 +238,14 @@ def prepare_train_validate(train, validate, columns_to_scale):
     train = drop_columns(train)
     validate = drop_columns(validate)
     return make_X_and_y(train, validate, columns_to_scale)
-    
+
+def prepare_test(train, test, columns_to_scale):
+    #make columns to be modeled on
+    test = make_modeling_columns(test)
+    #drop unnecessary columns
+    test = drop_columns(test)    
+    _, _, X_test, y_test = make_X_and_y(train, test, columns_to_scale)
+    return X_test, y_test
 
 ### PREPARATION FUNCTIONS
 
