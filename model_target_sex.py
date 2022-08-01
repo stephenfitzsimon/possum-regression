@@ -7,6 +7,7 @@ import pandas as pd
 from sklearn.preprocessing import StandardScaler
 import sklearn.metrics as metrics
 
+#model modules
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 import sklearn.neighbors as neigh
@@ -53,8 +54,10 @@ OTHER_MODEL_COLUMNS = [
     'sex'
 ]
 
+#holds the model strategy types
 MODEL_STRATEGIES = ['measurement_only', 'ratio_only', 'measurement_ratio']
 
+#sets up the model strategies
 MODEL_STRATEGY_DICTIONARY = {
     'measurement_only':MEASUREMENT_COLUMNS,
     'measurement_ratio': MEASUREMENT_COLUMNS + RATIO_COLUMNS,
@@ -67,7 +70,8 @@ DROP_COLUMNS = [
     'state', 
     'latitude', 
     'longitude', 
-    'elevation'
+    'elevation',
+    'age'
 ]
 
 ### MODEL MAKERS
