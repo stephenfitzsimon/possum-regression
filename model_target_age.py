@@ -63,7 +63,7 @@ DROP_COLUMNS = [
 
 def model_maker(train, validate):
     strategy_column_name = 'modeling_strategy'
-    outputs = [] + make_baseline_model(train, validate)
+    outputs = [] + make_baseline_model(train, validate, return_df = False)
     train_predictions = train[['case', 'age']].copy()
     validate_predictions = validate[['case', 'age']].copy()
     for strategy in MODEL_STRATEGIES:
@@ -134,7 +134,7 @@ def make_linear_regression_model(X_train, y_train, X_val, y_val, return_predicti
     else:
         return output
 
-def make_baseline_model(train, validate, return_df = False):
+def make_baseline_model(train, validate, return_df = True):
     """
     Creates two baseline model, one based on mean and one based on median.  Returns a dataframe
     Containing their evaluation metrics.
