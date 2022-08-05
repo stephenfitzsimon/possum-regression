@@ -12,7 +12,9 @@ from sklearn.preprocessing import StandardScaler
 
 from sklearn.linear_model import LinearRegression, TweedieRegressor
 from sklearn.neighbors import KNeighborsRegressor, RadiusNeighborsRegressor
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.svm import LinearSVR
+from sklearn.ensemble import RandomForestRegressor
 
 ### GLOBAL CONSTANTS
 
@@ -59,7 +61,55 @@ DROP_COLUMNS = [
     'sex'
 ]
 
+MODELS = [
+    {
+        'name':'RadiusNeighborsRegressor',
+        'model':RadiusNeighborsRegressor()
+    },
+    {
+        'name':'KNeighborsRegressor',
+        'model':KNeighborsRegressor()
+    },
+    {
+        'name':'TweedieRegressor',
+        'model':TweedieRegressor()
+    },
+    {
+        'name':'LinearRegression',
+        'model':LinearRegression()
+    },
+    {
+        'name':'RandomForestRegressor',
+        'model':RandomForestRegressor()
+    }
+]
+
 ### MODEL MAKERS
+
+def test_model(train, validate, test):
+    X_train, y_train, X_val, y_val = prepare_train_validate(train, 
+                                                            validate, 
+                                                            MODEL_STRATEGY_DICTIONARY['all_columns']
+                                                           )
+    X_test, y_test = prepare_test(train, 
+                                  test, 
+                                  MODEL_STRATEGY_DICTIONARY['all_columns']
+                                 )
+    output, y_test, model = make_radius_neighbor_model_test(X_train, y_train, X_val, y_val, X_test, y_test)
+    y_test['residual'] = y_test['predicted'] - y_test['age']
+    return pd.DataFrame(output), y_test, model
+
+def make_radius_neighbor_model_test(X_train, y_train, X_val, y_val, X_test, y_test):
+    model = RadiusNeighborsRegressor()
+    model = model.fit(X_train, y_train['age'])
+    y_train['predicted'] = model.predict(X_train)
+    y_val['predicted'] = model.predict(X_val)
+    y_test['predicted'] = model.predict(X_test)
+    output = evaluate_test_model([{'set':'train', 'df':y_train},
+                                  {'set':'validate', 'df':y_val},
+                                  {'set':'test', 'df':y_test}
+                                 ])
+    return output, y_test, model
 
 def model_maker(train, validate):
     strategy_column_name = 'modeling_strategy'
@@ -68,71 +118,21 @@ def model_maker(train, validate):
     validate_predictions = validate[['case', 'age']].copy()
     for strategy in MODEL_STRATEGIES:
         X_train, y_train, X_val, y_val = prepare_train_validate(train, validate, MODEL_STRATEGY_DICTIONARY[strategy])
-        output_linear_regression, y_t, y_v = make_linear_regression_model(X_train, y_train, X_val, y_val, True)
-        train_predictions[f'linearregression_{strategy}'] = y_t['predicted']
-        validate_predictions[f'linearregression_{strategy}'] = y_v['predicted']
-        output_linear_regression[strategy_column_name] = strategy
-        outputs.append(output_linear_regression)
-        output_lasso_regression, y_t, y_v = make_lasso_model(X_train, y_train, X_val, y_val, True)
-        train_predictions[f'lasso_{strategy}'] = y_t['predicted']
-        validate_predictions[f'lasso_{strategy}'] = y_v['predicted']
-        output_lasso_regression[strategy_column_name] = strategy
-        outputs.append(output_lasso_regression)
-        output_kneighbors_regression, y_t, y_v = make_kneighbors_model(X_train, y_train, X_val, y_val, True)
-        train_predictions[f'kneighbors_{strategy}'] = y_t['predicted']
-        validate_predictions[f'kneighbors_{strategy}'] = y_v['predicted']
-        output_kneighbors_regression[strategy_column_name] = strategy
-        outputs.append(output_kneighbors_regression)
-        output_radiusneighbors_regression, y_t, y_v = make_radiusneighbors_model(X_train, y_train, X_val, y_val, True)
-        train_predictions[f'radiusneighbors_{strategy}'] = y_t['predicted']
-        validate_predictions[f'radiusneighbors_{strategy}'] = y_v['predicted']
-        output_radiusneighbors_regression[strategy_column_name] = strategy
-        outputs.append(output_radiusneighbors_regression)
-    return pd.DataFrame(outputs), train_predictions, validate_predictions
-    
-def make_radiusneighbors_model(X_train, y_train, X_val, y_val, return_predictions = True):
-    rn = RadiusNeighborsRegressor()
-    rn = rn.fit(X_train, y_train['age'])
-    y_train['predicted'] = rn.predict(X_train)
-    y_val['predicted'] = rn.predict(X_val)
-    output = evaluate_train_validate_model(y_train, y_val, 'RadiusNeighborsRegressor')
-    if return_predictions:
-        return output, y_train, y_val
-    else:
-        return output
-    
-def make_kneighbors_model(X_train, y_train, X_val, y_val, return_predictions = True):
-    nr = KNeighborsRegressor()
-    nr = nr.fit(X_train, y_train['age'])
-    y_train['predicted'] = nr.predict(X_train)
-    y_val['predicted'] = nr.predict(X_val)
-    output = evaluate_train_validate_model(y_train, y_val, 'KNeighborsRegressor')
-    if return_predictions:
-        return output, y_train, y_val
-    else:
-        return output
-    
-def make_lasso_model(X_train, y_train, X_val, y_val, return_predictions = True):
-    tr = TweedieRegressor()
-    tr = tr.fit(X_train, y_train['age'])
-    y_train['predicted'] = tr.predict(X_train)
-    y_val['predicted'] = tr.predict(X_val)
-    output = evaluate_train_validate_model(y_train, y_val, 'TweedieRegressor')
-    if return_predictions:
-        return output, y_train, y_val
-    else:
-        return output
-    
-def make_linear_regression_model(X_train, y_train, X_val, y_val, return_predictions = True):
-    lr = LinearRegression()
-    lr = lr.fit(X_train, y_train['age'])
-    y_train['predicted'] = lr.predict(X_train)
-    y_val['predicted'] = lr.predict(X_val)
-    output = evaluate_train_validate_model(y_train, y_val, 'LinearRegression')
-    if return_predictions:
-        return output, y_train, y_val
-    else:
-        return output
+        for model_item in MODELS:
+            output, train_predict, validate_predict = make_model(X_train, y_train, X_val, y_val, model_item)
+            output['model_strategy'] = strategy
+            outputs.append(output)
+            model_name = model_item['name']
+            train_predictions[f'{model_name}_{strategy}'] = train_predict['predicted']
+            validate_predictions[f'{model_name}_{strategy}'] = validate_predict['predicted']
+    return pd.DataFrame(outputs), train_predictions, validate_predictions    
+               
+def make_model(X_train, y_train, X_val, y_val, model_item):
+    model_item['model'] = model_item['model'].fit(X_train, y_train['age'])
+    y_train['predicted'] = model_item['model'].predict(X_train)
+    y_val['predicted'] = model_item['model'].predict(X_val)
+    output = evaluate_train_validate_model(y_train, y_val, model_item['name'])
+    return output, y_train, y_val
 
 def make_baseline_model(train, validate, return_df = True):
     """
@@ -157,6 +157,20 @@ def make_baseline_model(train, validate, return_df = True):
     else:
         return outputs
 
+def evaluate_test_model(y_values):
+    outputs = []
+    for y_predict in y_values:
+        predictions_df = y_predict['df']
+        mse2 = metrics.mean_squared_error(predictions_df['age'], predictions_df['predicted'])
+        evs = metrics.explained_variance_score(predictions_df['age'], predictions_df['predicted'])
+        output = {
+            'dataset':y_predict['set'],
+            'RMSE':sqrt(mse2),
+            'explained_variance':evs
+        }
+        outputs.append(output)
+    return outputs
+        
 def evaluate_train_validate_model(model_train, model_validate, model_name):
     #calculate the metrics to evaluate
     mse2_train = metrics.mean_squared_error(model_train['age'], model_train['predicted'])
@@ -191,7 +205,7 @@ def prepare_train_validate(train, validate, columns_to_scale):
 
 def prepare_test(train, test, columns_to_scale):
     #drop unnecessary columns
-    test = drop_columns(test)    
+    test = drop_columns(test)
     _, _, X_test, y_test = make_X_and_y(train, test, columns_to_scale)
     return X_test, y_test
 
